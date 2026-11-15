@@ -395,4 +395,32 @@
       ]]></body>
     </pcode>
 </callfixup>
+
+<!-- MSVC's float-to-integer helpers: convert ST0 (truncating) to a 64-bit integer in EDX:EAX and
+     pop the x87 stack. Without the fixup the pop is invisible: the value under the converted one
+     stays ST1 to the decompiler while the caller reads it as ST0 (an extraout_ST0). The injection
+     replaces only the CALL op, so it also pops the return address the instruction pushed. -->
+<callfixup name="ftol">
+  <target name="_ftol"/>
+  <target name="__ftol"/>
+  <target name="_ftol2"/>
+  <target name="__ftol2"/>
+  <target name="_ftol2_sse"/>
+  <target name="__ftol2_sse"/>
+  <pcode>
+    <body><![CDATA[
+      ftoltmp:8 = trunc(ST0);
+      EAX = ftoltmp:4;
+      EDX = ftoltmp(4);
+      ST0 = ST1;
+      ST1 = ST2;
+      ST2 = ST3;
+      ST3 = ST4;
+      ST4 = ST5;
+      ST5 = ST6;
+      ST6 = ST7;
+      ESP = ESP + 4;
+    ]]></body>
+  </pcode>
+</callfixup>
 </compiler_spec>
