@@ -268,9 +268,6 @@
   <target name="FID_conflict:__EH_epilog3_GS"/>
   <target name="FID_conflict:__EH_epilog3_catch"/>
   <target name="FID_conflict:__EH_epilog3_catch_GS"/>
-  <target name="SEH_epilog"/>
-  <target name="_SEH_epilog"/>
-  <target name="__SEH_epilog"/>
   <target name="SEH_epilog4"/>
   <target name="_SEH_epilog4"/>
   <target name="__SEH_epilog4"/>
@@ -280,6 +277,28 @@
   <target name="FID_conflict:__SEH_epilog4_GS"/>
   <pcode>
    <body><![CDATA[
+    ESP = EBP;
+    EBP = * ESP;
+    ESP = ESP + 4;
+   ]]></body>
+  </pcode>
+</callfixup>
+
+<!-- MSVC 7.x's __SEH_epilog undoes __SEH_prolog: it restores the exception list, pops its own
+     return address, then EDI, ESI and EBX, which the prolog saved below the locals, and leaves the
+     frame (mov ecx,[ebp-10h]; mov fs:[0],ecx; pop ecx; pop edi; pop esi; pop ebx; leave; push ecx;
+     ret). The shared EH_epilog3 payload restored only EBP and ESP, so the three registers were
+     never seen restored and the functions using it named them unaff_. The CALL's push of the
+     return address stays (only the CALL op is replaced), so the saved EDI is at ESP + 4. -->
+<callfixup name="SEH_epilog">
+  <target name="SEH_epilog"/>
+  <target name="_SEH_epilog"/>
+  <target name="__SEH_epilog"/>
+  <pcode>
+   <body><![CDATA[
+    EDI = *(ESP + 4);
+    ESI = *(ESP + 8);
+    EBX = *(ESP + 12);
     ESP = EBP;
     EBP = * ESP;
     ESP = ESP + 4;
