@@ -98,8 +98,10 @@ public class ParamListStandard implements ParamList {
 				}
 			}
 
-			status[grp] =
-				element.getAddrBySlot(status[grp], tp.getAlignedLength(), tp.getAlignment(), param);
+			// A register holds the type's own bytes; padding to the alignment belongs to the stack
+			// only (an x87 float10, 10 bytes long with an aligned length of 16, fits ST0)
+			int size = element.getSpace().isStackSpace() ? tp.getAlignedLength() : tp.getLength();
+			status[grp] = element.getAddrBySlot(status[grp], size, tp.getAlignment(), param);
 			if (param.address == null) {
 				continue;	// -tp- does not fit in this entry
 			}

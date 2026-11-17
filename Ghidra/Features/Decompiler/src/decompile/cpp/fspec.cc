@@ -745,7 +745,10 @@ uint4 ParamListStandard::assignAddressFallback(type_class resource,Datatype *tp,
 	continue;			// Wrong type
     }
 
-    param.addr = curEntry.getAddrBySlot(status[grp],tp->getAlignSize(),tp->getAlignment());
+    // A register holds the type's own bytes; padding to the alignment belongs to the stack only
+    // (an x87 float10, 10 bytes long with an aligned size of 16, fits ST0)
+    int4 sz = (curEntry.getSpace()->getType() == IPTR_SPACEBASE) ? tp->getAlignSize() : tp->getSize();
+    param.addr = curEntry.getAddrBySlot(status[grp],sz,tp->getAlignment());
     if (param.addr.isInvalid()) continue; // If -tp- doesn't fit an invalid address is returned
     if (curEntry.isExclusion()) {
       const vector<int4> &groupSet(curEntry.getAllGroups());
